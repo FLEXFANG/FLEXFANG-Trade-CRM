@@ -40,6 +40,6 @@ jobs:
           p.write_text(text, encoding='utf-8')
           PY
       - name: Run Trade CRM domain tests
-        run: mvn -B -pl yudao-module-crm -am -Dtest=CrmTradeProfileServiceImplTest,CrmTradeProfileSaveReqVOTest,CrmClueTradeProfileTransformTest,CrmTradeRfqServiceImplTest,CrmTradeRfqSaveReqVOTest,CrmTradeSampleServiceImplTest,CrmTradeSampleSaveReqVOTest,CrmTradeQuotationServiceImplTest,CrmTradeQuotationSaveReqVOTest -Dsurefire.failIfNoSpecifiedTests=false test
+        run: mvn -B -pl yudao-module-crm -am -Dtest=CrmTradeProfileServiceImplTest,CrmTradeProfileSaveReqVOTest,CrmClueTradeProfileTransformTest,CrmTradeRfqServiceImplTest,CrmTradeRfqSaveReqVOTest,CrmTradeSampleServiceImplTest,CrmTradeSampleSaveReqVOTest,CrmTradeQuotationServiceImplTest,CrmTradeQuotationSaveReqVOTest,CrmTradeWorkbenchServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test
       - name: Package CRM and dependencies
         run: mvn -B -pl yudao-module-crm -am -DskipTests package
