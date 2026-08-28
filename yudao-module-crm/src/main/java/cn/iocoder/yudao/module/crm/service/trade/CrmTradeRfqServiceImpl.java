@@ -9,6 +9,7 @@ import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeRfqSaveReqV
 import cn.iocoder.yudao.module.crm.dal.dataobject.business.CrmBusinessDO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeRfqDO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeRfqItemDO;
+import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeQuotationMapper;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeRfqItemMapper;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeRfqMapper;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeSampleMapper;
@@ -34,6 +35,7 @@ public class CrmTradeRfqServiceImpl implements CrmTradeRfqService {
     @Resource private CrmTradeRfqMapper rfqMapper;
     @Resource private CrmTradeRfqItemMapper rfqItemMapper;
     @Resource private CrmTradeSampleMapper sampleMapper;
+    @Resource private CrmTradeQuotationMapper quotationMapper;
     @Resource private CrmCustomerService customerService;
     @Resource private CrmBusinessService businessService;
     @Resource private CrmProductService productService;
@@ -66,9 +68,8 @@ public class CrmTradeRfqServiceImpl implements CrmTradeRfqService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteRfq(Long id) {
         validateRfq(id);
-        if (sampleMapper.selectCountByRfqId(id) > 0) {
-            throw exception(TRADE_RFQ_DELETE_FAIL_SAMPLE_EXISTS);
-        }
+        if (sampleMapper.selectCountByRfqId(id) > 0) throw exception(TRADE_RFQ_DELETE_FAIL_SAMPLE_EXISTS);
+        if (quotationMapper.selectCountByRfqId(id) > 0) throw exception(TRADE_RFQ_DELETE_FAIL_QUOTATION_EXISTS);
         rfqItemMapper.deleteByRfqId(id);
         rfqMapper.deleteById(id);
     }
@@ -83,16 +84,13 @@ public class CrmTradeRfqServiceImpl implements CrmTradeRfqService {
     }
 
     @Override public PageResult<CrmTradeRfqDO> getRfqPage(CrmTradeRfqPageReqVO pageReqVO) { return rfqMapper.selectPage(pageReqVO); }
-
     @Override public List<CrmTradeRfqItemDO> getRfqItems(Long rfqId) { return rfqItemMapper.selectListByRfqId(rfqId); }
 
     private void validateRelations(CrmTradeRfqSaveReqVO reqVO) {
         customerService.validateCustomer(reqVO.getCustomerId());
         if (reqVO.getBusinessId() != null) {
             CrmBusinessDO business = businessService.validateBusiness(reqVO.getBusinessId());
-            if (!Objects.equals(business.getCustomerId(), reqVO.getCustomerId())) {
-                throw exception(TRADE_RFQ_BUSINESS_CUSTOMER_MISMATCH);
-            }
+            if (!Objects.equals(business.getCustomerId(), reqVO.getCustomerId())) throw exception(TRADE_RFQ_BUSINESS_CUSTOMER_MISMATCH);
         }
         adminUserApi.validateUser(reqVO.getOwnerUserId());
         List<Long> productIds = reqVO.getItems().stream().map(CrmTradeRfqItemReqVO::getProductId)
