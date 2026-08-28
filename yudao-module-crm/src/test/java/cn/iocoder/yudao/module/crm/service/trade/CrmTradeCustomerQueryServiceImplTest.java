@@ -2,14 +2,17 @@ package cn.iocoder.yudao.module.crm.service.trade;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.crm.controller.admin.customer.vo.customer.CrmCustomerPageReqVO;
+import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerDetailRespVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerPageReqVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerRespVO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.customer.CrmCustomerDO;
+import cn.iocoder.yudao.module.crm.dal.dataobject.followup.CrmFollowUpRecordDO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeProfileDO;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeProfileMapper;
 import cn.iocoder.yudao.module.crm.enums.common.CrmBizTypeEnum;
 import cn.iocoder.yudao.module.crm.enums.common.CrmSceneTypeEnum;
 import cn.iocoder.yudao.module.crm.service.customer.CrmCustomerService;
+import cn.iocoder.yudao.module.crm.service.followup.CrmFollowUpRecordService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,12 +22,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.PageParam.PAGE_SIZE_NONE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +45,8 @@ class CrmTradeCustomerQueryServiceImplTest {
     private CrmCustomerService customerService;
     @Mock
     private CrmTradeProfileMapper tradeProfileMapper;
+    @Mock
+    private CrmFollowUpRecordService followUpRecordService;
 
     @Test
     void getTradeCustomerPage_respectsNativePermissionQueryAndFiltersTradeProfile() {
@@ -126,6 +135,80 @@ class CrmTradeCustomerQueryServiceImplTest {
 
         assertEquals(List.of(10L, 20L, 30L),
                 result.getList().stream().map(CrmTradeCustomerRespVO::getCustomerId).toList());
+    }
+
+    @Test
+    void getTradeCustomerDetail_aggregatesProfileAndLatestTwentyFollowUps() {
+        Long customerId = 100L;
+        CrmCustomerDO customer = CrmCustomerDO.builder()
+                .id(customerId)
+                .name("Andes Helmets SAS")
+                .email("buyer@example.com")
+                .ownerUserId(9L)
+                .contactLastContent("Asked for revised FOB price")
+                .contactNextTime(LocalDateTime.of(2026, 8, 29, 10, 0))
+                .build();
+        CrmTradeProfileDO profile = CrmTradeProfileDO.builder()
+                .bizType(CrmBizTypeEnum.CRM_CUSTOMER.getType())
+                .bizId(customerId)
+                .countryCode("CO")
+                .companyType("IMPORTER")
+                .sourceChannel("META")
+                .expectedMoq(1000)
+                .containerPotential("40HQ")
+                .fclProbability(85)
+                .leadScore(90)
+                .riskScore(15)
+                .nextAction("Send revised FOB quotation")
+                .build();
+        List<CrmFollowUpRecordDO> followUps = new ArrayList<>();
+        LocalDateTime baseTime = LocalDateTime.of(2026, 8, 1, 9, 0);
+        for (long i = 0; i < 25; i++) {
+            CrmFollowUpRecordDO record = CrmFollowUpRecordDO.builder()
+                    .id(i)
+                    .bizType(CrmBizTypeEnum.CRM_CUSTOMER.getType())
+                    .bizId(customerId)
+                    .type(1)
+                    .content("Follow-up " + i)
+                    .nextTime(baseTime.plusDays(i + 1))
+                    .build();
+            record.setCreateTime(baseTime.plusDays(i));
+            followUps.add(record);
+        }
+        Collections.reverse(followUps); // Service must not rely on repository ordering.
+
+        when(customerService.getCustomer(customerId)).thenReturn(customer);
+        when(tradeProfileMapper.selectByBiz(CrmBizTypeEnum.CRM_CUSTOMER.getType(), customerId)).thenReturn(profile);
+        when(followUpRecordService.getFollowUpRecordByBiz(
+                CrmBizTypeEnum.CRM_CUSTOMER.getType(), Collections.singleton(customerId))).thenReturn(followUps);
+
+        CrmTradeCustomerDetailRespVO result = queryService.getTradeCustomerDetail(customerId);
+
+        assertEquals(customerId, result.getCustomer().getCustomerId());
+        assertEquals("Andes Helmets SAS", result.getCustomer().getCustomerName());
+        assertEquals("CO", result.getCustomer().getCountryCode());
+        assertEquals("IMPORTER", result.getCustomer().getCompanyType());
+        assertEquals(1000, result.getCustomer().getExpectedMoq());
+        assertEquals(85, result.getCustomer().getFclProbability());
+        assertEquals("Send revised FOB quotation", result.getCustomer().getNextAction());
+        assertEquals(20, result.getRecentFollowUps().size());
+        assertEquals(24L, result.getRecentFollowUps().get(0).getId());
+        assertEquals(5L, result.getRecentFollowUps().get(19).getId());
+        assertEquals("Follow-up 24", result.getRecentFollowUps().get(0).getContent());
+        verify(customerService).getCustomer(customerId);
+    }
+
+    @Test
+    void getTradeCustomerDetail_missingCustomerStopsBeforeProfileAndFollowUps() {
+        Long customerId = 404L;
+        when(customerService.getCustomer(customerId)).thenReturn(null);
+
+        CrmTradeCustomerDetailRespVO result = queryService.getTradeCustomerDetail(customerId);
+
+        assertNull(result);
+        verify(tradeProfileMapper, never()).selectByBiz(CrmBizTypeEnum.CRM_CUSTOMER.getType(), customerId);
+        verify(followUpRecordService, never()).getFollowUpRecordByBiz(
+                eq(CrmBizTypeEnum.CRM_CUSTOMER.getType()), anyCollection());
     }
 
 }
