@@ -1,0 +1,57 @@
+-- FLEXFANG Trade CRM v0.1
+-- Sample slice: sample commercial/logistics status + product snapshots. Target MySQL 8.x.
+
+CREATE TABLE IF NOT EXISTS `crm_trade_sample` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `no` varchar(64) NOT NULL COMMENT '样品编号',
+  `customer_id` bigint NOT NULL COMMENT '客户编号',
+  `business_id` bigint DEFAULT NULL COMMENT '商机编号',
+  `rfq_id` bigint DEFAULT NULL COMMENT 'RFQ编号',
+  `owner_user_id` bigint NOT NULL COMMENT '负责人',
+  `status` varchar(32) NOT NULL COMMENT '样品状态',
+  `request_time` datetime DEFAULT NULL COMMENT '申请时间',
+  `fee` decimal(18,2) DEFAULT NULL COMMENT '样品费',
+  `freight` decimal(18,2) DEFAULT NULL COMMENT '运费',
+  `currency` varchar(8) NOT NULL COMMENT '币种',
+  `refundable_on_order` bit(1) NOT NULL DEFAULT b'1' COMMENT '下单是否返还样品费',
+  `payment_status` varchar(32) NOT NULL COMMENT '付款/返还状态',
+  `carrier` varchar(128) DEFAULT NULL COMMENT '物流商',
+  `tracking_no` varchar(128) DEFAULT NULL COMMENT '物流单号',
+  `shipped_time` datetime DEFAULT NULL COMMENT '寄出时间',
+  `received_time` datetime DEFAULT NULL COMMENT '签收时间',
+  `approval_status` varchar(32) NOT NULL DEFAULT 'PENDING' COMMENT '客户确认状态',
+  `feedback` varchar(1000) DEFAULT NULL COMMENT '样品反馈',
+  `remark` varchar(1000) DEFAULT NULL COMMENT '备注',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT '0' COMMENT '租户编号',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_crm_trade_sample_no` (`tenant_id`, `no`, `deleted`),
+  KEY `idx_crm_trade_sample_customer` (`tenant_id`, `customer_id`),
+  KEY `idx_crm_trade_sample_rfq` (`tenant_id`, `rfq_id`),
+  KEY `idx_crm_trade_sample_owner_status` (`tenant_id`, `owner_user_id`, `status`),
+  KEY `idx_crm_trade_sample_tracking` (`tenant_id`, `tracking_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CRM 外贸样品';
+
+CREATE TABLE IF NOT EXISTS `crm_trade_sample_item` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `sample_id` bigint NOT NULL COMMENT '样品编号',
+  `product_id` bigint DEFAULT NULL COMMENT 'CRM产品编号',
+  `product_name` varchar(255) NOT NULL COMMENT '产品名称快照',
+  `specification` varchar(512) DEFAULT NULL COMMENT '规格',
+  `color` varchar(128) DEFAULT NULL COMMENT '颜色',
+  `quantity` int NOT NULL COMMENT '数量',
+  `unit_price` decimal(18,4) DEFAULT NULL COMMENT '样品单价',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT '0' COMMENT '租户编号',
+  PRIMARY KEY (`id`),
+  KEY `idx_crm_trade_sample_item_sample` (`tenant_id`, `sample_id`),
+  KEY `idx_crm_trade_sample_item_product` (`tenant_id`, `product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CRM 外贸样品明细';

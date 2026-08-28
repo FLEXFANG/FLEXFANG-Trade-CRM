@@ -11,6 +11,7 @@ import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeRfqDO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeRfqItemDO;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeRfqItemMapper;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeRfqMapper;
+import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeSampleMapper;
 import cn.iocoder.yudao.module.crm.service.business.CrmBusinessService;
 import cn.iocoder.yudao.module.crm.service.customer.CrmCustomerService;
 import cn.iocoder.yudao.module.crm.service.product.CrmProductService;
@@ -30,18 +31,13 @@ import static cn.iocoder.yudao.module.crm.enums.trade.CrmTradeErrorCodeConstants
 @Validated
 public class CrmTradeRfqServiceImpl implements CrmTradeRfqService {
 
-    @Resource
-    private CrmTradeRfqMapper rfqMapper;
-    @Resource
-    private CrmTradeRfqItemMapper rfqItemMapper;
-    @Resource
-    private CrmCustomerService customerService;
-    @Resource
-    private CrmBusinessService businessService;
-    @Resource
-    private CrmProductService productService;
-    @Resource
-    private AdminUserApi adminUserApi;
+    @Resource private CrmTradeRfqMapper rfqMapper;
+    @Resource private CrmTradeRfqItemMapper rfqItemMapper;
+    @Resource private CrmTradeSampleMapper sampleMapper;
+    @Resource private CrmCustomerService customerService;
+    @Resource private CrmBusinessService businessService;
+    @Resource private CrmProductService productService;
+    @Resource private AdminUserApi adminUserApi;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -70,33 +66,25 @@ public class CrmTradeRfqServiceImpl implements CrmTradeRfqService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteRfq(Long id) {
         validateRfq(id);
+        if (sampleMapper.selectCountByRfqId(id) > 0) {
+            throw exception(TRADE_RFQ_DELETE_FAIL_SAMPLE_EXISTS);
+        }
         rfqItemMapper.deleteByRfqId(id);
         rfqMapper.deleteById(id);
     }
 
-    @Override
-    public CrmTradeRfqDO getRfq(Long id) {
-        return rfqMapper.selectById(id);
-    }
+    @Override public CrmTradeRfqDO getRfq(Long id) { return rfqMapper.selectById(id); }
 
     @Override
     public CrmTradeRfqDO validateRfq(Long id) {
         CrmTradeRfqDO rfq = rfqMapper.selectById(id);
-        if (rfq == null) {
-            throw exception(TRADE_RFQ_NOT_EXISTS);
-        }
+        if (rfq == null) throw exception(TRADE_RFQ_NOT_EXISTS);
         return rfq;
     }
 
-    @Override
-    public PageResult<CrmTradeRfqDO> getRfqPage(CrmTradeRfqPageReqVO pageReqVO) {
-        return rfqMapper.selectPage(pageReqVO);
-    }
+    @Override public PageResult<CrmTradeRfqDO> getRfqPage(CrmTradeRfqPageReqVO pageReqVO) { return rfqMapper.selectPage(pageReqVO); }
 
-    @Override
-    public List<CrmTradeRfqItemDO> getRfqItems(Long rfqId) {
-        return rfqItemMapper.selectListByRfqId(rfqId);
-    }
+    @Override public List<CrmTradeRfqItemDO> getRfqItems(Long rfqId) { return rfqItemMapper.selectListByRfqId(rfqId); }
 
     private void validateRelations(CrmTradeRfqSaveReqVO reqVO) {
         customerService.validateCustomer(reqVO.getCustomerId());
@@ -107,28 +95,19 @@ public class CrmTradeRfqServiceImpl implements CrmTradeRfqService {
             }
         }
         adminUserApi.validateUser(reqVO.getOwnerUserId());
-        List<Long> productIds = reqVO.getItems().stream()
-                .map(CrmTradeRfqItemReqVO::getProductId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-        if (!productIds.isEmpty()) {
-            productService.validProductList(productIds);
-        }
+        List<Long> productIds = reqVO.getItems().stream().map(CrmTradeRfqItemReqVO::getProductId)
+                .filter(Objects::nonNull).distinct().toList();
+        if (!productIds.isEmpty()) productService.validProductList(productIds);
     }
 
     private void validateRfqNoDuplicate(Long id, String no) {
         CrmTradeRfqDO existing = rfqMapper.selectByNo(no);
-        if (existing != null && !Objects.equals(existing.getId(), id)) {
-            throw exception(TRADE_RFQ_NO_EXISTS);
-        }
+        if (existing != null && !Objects.equals(existing.getId(), id)) throw exception(TRADE_RFQ_NO_EXISTS);
     }
 
     private void saveItems(Long rfqId, List<CrmTradeRfqItemReqVO> items) {
-        List<CrmTradeRfqItemDO> itemDOs = items.stream()
-                .map(item -> BeanUtils.toBean(item, CrmTradeRfqItemDO.class).setRfqId(rfqId))
-                .toList();
-        rfqItemMapper.insertBatch(itemDOs);
+        rfqItemMapper.insertBatch(items.stream()
+                .map(item -> BeanUtils.toBean(item, CrmTradeRfqItemDO.class).setRfqId(rfqId)).toList());
     }
 
 }

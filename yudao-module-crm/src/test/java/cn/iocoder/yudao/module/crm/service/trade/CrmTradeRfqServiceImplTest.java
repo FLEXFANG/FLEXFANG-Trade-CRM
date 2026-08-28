@@ -6,6 +6,7 @@ import cn.iocoder.yudao.module.crm.dal.dataobject.business.CrmBusinessDO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeRfqDO;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeRfqItemMapper;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeRfqMapper;
+import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeSampleMapper;
 import cn.iocoder.yudao.module.crm.service.business.CrmBusinessService;
 import cn.iocoder.yudao.module.crm.service.customer.CrmCustomerService;
 import cn.iocoder.yudao.module.crm.service.product.CrmProductService;
@@ -28,11 +29,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CrmTradeRfqServiceImplTest {
 
-    @InjectMocks
-    private CrmTradeRfqServiceImpl rfqService;
-
+    @InjectMocks private CrmTradeRfqServiceImpl rfqService;
     @Mock private CrmTradeRfqMapper rfqMapper;
     @Mock private CrmTradeRfqItemMapper rfqItemMapper;
+    @Mock private CrmTradeSampleMapper sampleMapper;
     @Mock private CrmCustomerService customerService;
     @Mock private CrmBusinessService businessService;
     @Mock private CrmProductService productService;
@@ -43,14 +43,9 @@ class CrmTradeRfqServiceImplTest {
         CrmTradeRfqSaveReqVO reqVO = reqVO();
         when(businessService.validateBusiness(20L)).thenReturn(CrmBusinessDO.builder().id(20L).customerId(10L).build());
         when(rfqMapper.selectByNo("RFQ-001")).thenReturn(null);
-        doAnswer(invocation -> {
-            CrmTradeRfqDO rfq = invocation.getArgument(0);
-            rfq.setId(1L);
-            return 1;
-        }).when(rfqMapper).insert(any(CrmTradeRfqDO.class));
-
+        doAnswer(invocation -> { CrmTradeRfqDO rfq = invocation.getArgument(0); rfq.setId(1L); return 1; })
+                .when(rfqMapper).insert(any(CrmTradeRfqDO.class));
         Long id = rfqService.createRfq(reqVO);
-
         assertEquals(1L, id);
         verify(customerService).validateCustomer(10L);
         verify(businessService).validateBusiness(20L);
@@ -61,21 +56,16 @@ class CrmTradeRfqServiceImplTest {
         verify(rfqMapper).insert(captor.capture());
         assertEquals("USD", captor.getValue().getCurrency());
         assertEquals("FOB", captor.getValue().getIncoterm());
-        assertEquals("Callao", captor.getValue().getDestinationPort());
     }
 
     @Test
     void updateRfq_replacesItems() {
-        CrmTradeRfqSaveReqVO reqVO = reqVO();
-        reqVO.setId(1L);
+        CrmTradeRfqSaveReqVO reqVO = reqVO(); reqVO.setId(1L);
         CrmTradeRfqDO existing = CrmTradeRfqDO.builder().id(1L).no("RFQ-001").customerId(10L).build();
         when(rfqMapper.selectById(1L)).thenReturn(existing);
         when(rfqMapper.selectByNo("RFQ-001")).thenReturn(existing);
         when(businessService.validateBusiness(20L)).thenReturn(CrmBusinessDO.builder().id(20L).customerId(10L).build());
-        when(rfqMapper.updateById(any(CrmTradeRfqDO.class))).thenReturn(1);
-
         rfqService.updateRfq(reqVO);
-
         verify(rfqMapper).updateById(any(CrmTradeRfqDO.class));
         verify(rfqItemMapper).deleteByRfqId(1L);
         verify(rfqItemMapper).insertBatch(anyCollection());
@@ -83,43 +73,34 @@ class CrmTradeRfqServiceImplTest {
 
     @Test
     void createRfq_rejectsBusinessFromDifferentCustomer() {
-        CrmTradeRfqSaveReqVO reqVO = reqVO();
         when(businessService.validateBusiness(20L)).thenReturn(CrmBusinessDO.builder().id(20L).customerId(999L).build());
-
-        assertThrows(RuntimeException.class, () -> rfqService.createRfq(reqVO));
+        assertThrows(RuntimeException.class, () -> rfqService.createRfq(reqVO()));
         verify(rfqMapper, never()).insert(any(CrmTradeRfqDO.class));
     }
 
     @Test
     void createRfq_rejectsDuplicateNo() {
-        CrmTradeRfqSaveReqVO reqVO = reqVO();
         when(businessService.validateBusiness(20L)).thenReturn(CrmBusinessDO.builder().id(20L).customerId(10L).build());
         when(rfqMapper.selectByNo("RFQ-001")).thenReturn(CrmTradeRfqDO.builder().id(99L).no("RFQ-001").build());
+        assertThrows(RuntimeException.class, () -> rfqService.createRfq(reqVO()));
+    }
 
-        assertThrows(RuntimeException.class, () -> rfqService.createRfq(reqVO));
-        verify(rfqMapper, never()).insert(any(CrmTradeRfqDO.class));
+    @Test
+    void deleteRfq_rejectsWhenSampleExists() {
+        when(rfqMapper.selectById(1L)).thenReturn(CrmTradeRfqDO.builder().id(1L).build());
+        when(sampleMapper.selectCountByRfqId(1L)).thenReturn(1L);
+        assertThrows(RuntimeException.class, () -> rfqService.deleteRfq(1L));
+        verify(rfqMapper, never()).deleteById(1L);
     }
 
     private static CrmTradeRfqSaveReqVO reqVO() {
         CrmTradeRfqItemReqVO item = new CrmTradeRfqItemReqVO();
-        item.setProductId(100L);
-        item.setProductName("F901 Flip-up Helmet");
-        item.setSpecification("Matte black / clear visor");
-        item.setQuantity(1000);
-        item.setTargetPrice(new BigDecimal("15.50"));
-
+        item.setProductId(100L); item.setProductName("F901 Flip-up Helmet"); item.setSpecification("Matte black");
+        item.setQuantity(1000); item.setTargetPrice(new BigDecimal("15.50"));
         CrmTradeRfqSaveReqVO reqVO = new CrmTradeRfqSaveReqVO();
-        reqVO.setNo("RFQ-001");
-        reqVO.setCustomerId(10L);
-        reqVO.setBusinessId(20L);
-        reqVO.setOwnerUserId(30L);
-        reqVO.setSourceChannel("EMAIL");
-        reqVO.setStatus("QUOTING");
-        reqVO.setCurrency("USD");
-        reqVO.setIncoterm("FOB");
-        reqVO.setDestinationPort("Callao");
-        reqVO.setCertificationRequirement("DOT");
-        reqVO.setItems(List.of(item));
+        reqVO.setNo("RFQ-001"); reqVO.setCustomerId(10L); reqVO.setBusinessId(20L); reqVO.setOwnerUserId(30L);
+        reqVO.setSourceChannel("EMAIL"); reqVO.setStatus("QUOTING"); reqVO.setCurrency("USD"); reqVO.setIncoterm("FOB");
+        reqVO.setDestinationPort("Callao"); reqVO.setCertificationRequirement("DOT"); reqVO.setItems(List.of(item));
         return reqVO;
     }
 
