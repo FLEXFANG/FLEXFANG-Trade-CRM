@@ -5,12 +5,14 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 import cn.iocoder.yudao.module.crm.controller.admin.customer.vo.customer.CrmCustomerImportReqVO;
 import cn.iocoder.yudao.module.crm.controller.admin.customer.vo.customer.CrmCustomerImportRespVO;
+import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerDetailRespVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerImportExcelVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerPageReqVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerRespVO;
 import cn.iocoder.yudao.module.crm.service.trade.CrmTradeCustomerImportService;
 import cn.iocoder.yudao.module.crm.service.trade.CrmTradeCustomerQueryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -45,6 +48,14 @@ public class CrmTradeCustomerController {
     @PreAuthorize("@ss.hasPermission('crm:customer:query')")
     public CommonResult<PageResult<CrmTradeCustomerRespVO>> getTradeCustomerPage(@Valid CrmTradeCustomerPageReqVO reqVO) {
         return success(queryService.getTradeCustomerPage(reqVO, getLoginUserId()));
+    }
+
+    @GetMapping("/get")
+    @Operation(summary = "获得外贸客户详情和最近跟进")
+    @Parameter(name = "id", description = "客户编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('crm:customer:query')")
+    public CommonResult<CrmTradeCustomerDetailRespVO> getTradeCustomer(@RequestParam("id") Long id) {
+        return success(queryService.getTradeCustomerDetail(id));
     }
 
     @GetMapping("/get-import-template")
