@@ -24,17 +24,22 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Enable CRM module for isolated CI
+      - name: Enable CRM dependency chain for isolated CI
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('pom.xml')
           text = p.read_text(encoding='utf-8')
-          marker = '<!--        <module>yudao-module-crm</module>-->'
-          if marker not in text:
-              raise SystemExit('CRM module marker not found in root pom.xml')
-          p.write_text(text.replace(marker, '        <module>yudao-module-crm</module>', 1), encoding='utf-8')
+          markers = [
+              ('<!--        <module>yudao-module-bpm</module>-->', '        <module>yudao-module-bpm</module>'),
+              ('<!--        <module>yudao-module-crm</module>-->', '        <module>yudao-module-crm</module>'),
+          ]
+          for marker, replacement in markers:
+              if marker not in text:
+                  raise SystemExit(f'Module marker not found: {marker}')
+              text = text.replace(marker, replacement, 1)
+          p.write_text(text, encoding='utf-8')
           PY
 
       - name: Compile CRM and dependencies
