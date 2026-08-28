@@ -24,6 +24,9 @@ jobs:
           java-version: '17'
           cache: maven
 
+      - name: Validate Trade CRM permission contract
+        run: python scripts/check-trade-permissions.py
+
       - name: Enable CRM dependency chain for isolated CI
         shell: bash
         run: |
