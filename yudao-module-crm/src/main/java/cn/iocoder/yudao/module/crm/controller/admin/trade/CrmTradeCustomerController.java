@@ -1,11 +1,15 @@
 package cn.iocoder.yudao.module.crm.controller.admin.trade;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 import cn.iocoder.yudao.module.crm.controller.admin.customer.vo.customer.CrmCustomerImportReqVO;
 import cn.iocoder.yudao.module.crm.controller.admin.customer.vo.customer.CrmCustomerImportRespVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerImportExcelVO;
+import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerPageReqVO;
+import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerRespVO;
 import cn.iocoder.yudao.module.crm.service.trade.CrmTradeCustomerImportService;
+import cn.iocoder.yudao.module.crm.service.trade.CrmTradeCustomerQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -23,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils.getLoginUserId;
 
 @Tag(name = "管理后台 - 外贸 CRM 客户")
 @RestController
@@ -32,6 +37,15 @@ public class CrmTradeCustomerController {
 
     @Resource
     private CrmTradeCustomerImportService importService;
+    @Resource
+    private CrmTradeCustomerQueryService queryService;
+
+    @GetMapping("/page")
+    @Operation(summary = "获得外贸客户筛选分页")
+    @PreAuthorize("@ss.hasPermission('crm:customer:query')")
+    public CommonResult<PageResult<CrmTradeCustomerRespVO>> getTradeCustomerPage(@Valid CrmTradeCustomerPageReqVO reqVO) {
+        return success(queryService.getTradeCustomerPage(reqVO, getLoginUserId()));
+    }
 
     @GetMapping("/get-import-template")
     @Operation(summary = "下载外贸客户导入模板")
