@@ -12,9 +12,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -93,6 +93,70 @@ class CrmTradeProfileServiceImplTest {
 
         assertSame(expected, actual);
         verify(tradeProfileMapper).selectByBiz(expected.getBizType(), expected.getBizId());
+    }
+
+    @Test
+    void copyTradeProfile_copiesBusinessFieldsAndResetsIdentity() {
+        CrmTradeProfileDO source = CrmTradeProfileDO.builder()
+                .id(4000L)
+                .bizType(CrmBizTypeEnum.CRM_CLUE.getType())
+                .bizId(400L)
+                .countryCode("VN")
+                .companyType("DISTRIBUTOR")
+                .sourceChannel("WHATSAPP")
+                .expectedMoq(1000)
+                .incoterm("CIF")
+                .destinationPort("Hai Phong")
+                .containerPotential("40HQ")
+                .fclProbability(90)
+                .build();
+        source.setCreator("99");
+        source.setUpdater("99");
+        source.setCreateTime(LocalDateTime.now().minusDays(1));
+        source.setUpdateTime(LocalDateTime.now());
+        source.setDeleted(false);
+
+        when(tradeProfileMapper.selectByBiz(CrmBizTypeEnum.CRM_CLUE.getType(), 400L)).thenReturn(source);
+        when(tradeProfileMapper.selectByBiz(CrmBizTypeEnum.CRM_CUSTOMER.getType(), 500L)).thenReturn(null);
+        doAnswer(invocation -> {
+            CrmTradeProfileDO profile = invocation.getArgument(0);
+            profile.setId(5000L);
+            return 1;
+        }).when(tradeProfileMapper).insert(any(CrmTradeProfileDO.class));
+
+        Long targetProfileId = tradeProfileService.copyTradeProfile(
+                CrmBizTypeEnum.CRM_CLUE.getType(), 400L,
+                CrmBizTypeEnum.CRM_CUSTOMER.getType(), 500L);
+
+        assertEquals(5000L, targetProfileId);
+        ArgumentCaptor<CrmTradeProfileDO> captor = ArgumentCaptor.forClass(CrmTradeProfileDO.class);
+        verify(tradeProfileMapper).insert(captor.capture());
+        CrmTradeProfileDO copied = captor.getValue();
+        assertEquals(CrmBizTypeEnum.CRM_CUSTOMER.getType(), copied.getBizType());
+        assertEquals(500L, copied.getBizId());
+        assertEquals("VN", copied.getCountryCode());
+        assertEquals("DISTRIBUTOR", copied.getCompanyType());
+        assertEquals(1000, copied.getExpectedMoq());
+        assertEquals("CIF", copied.getIncoterm());
+        assertEquals("40HQ", copied.getContainerPotential());
+        assertNull(copied.getCreator());
+        assertNull(copied.getUpdater());
+        assertNull(copied.getCreateTime());
+        assertNull(copied.getUpdateTime());
+        assertNull(copied.getDeleted());
+    }
+
+    @Test
+    void copyTradeProfile_noSourceIsNoop() {
+        when(tradeProfileMapper.selectByBiz(CrmBizTypeEnum.CRM_CLUE.getType(), 600L)).thenReturn(null);
+
+        Long targetProfileId = tradeProfileService.copyTradeProfile(
+                CrmBizTypeEnum.CRM_CLUE.getType(), 600L,
+                CrmBizTypeEnum.CRM_CUSTOMER.getType(), 700L);
+
+        assertNull(targetProfileId);
+        verify(tradeProfileMapper, never()).insert(any(CrmTradeProfileDO.class));
+        verify(tradeProfileMapper, never()).updateById(any(CrmTradeProfileDO.class));
     }
 
     private static CrmTradeProfileSaveReqVO createReqVO(Integer bizType, Long bizId) {

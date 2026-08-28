@@ -43,7 +43,7 @@ jobs:
           PY
 
       - name: Run Trade Profile tests
-        run: mvn -B -pl yudao-module-crm -am -Dtest=CrmTradeProfileServiceImplTest,CrmTradeProfileSaveReqVOTest -Dsurefire.failIfNoSpecifiedTests=false test
+        run: mvn -B -pl yudao-module-crm -am -Dtest=CrmTradeProfileServiceImplTest,CrmTradeProfileSaveReqVOTest,CrmClueTradeProfileTransformTest -Dsurefire.failIfNoSpecifiedTests=false test
 
       - name: Package CRM and dependencies
         run: mvn -B -pl yudao-module-crm -am -DskipTests package

@@ -39,4 +39,28 @@ public class CrmTradeProfileServiceImpl implements CrmTradeProfileService {
         return profile.getId();
     }
 
+    @Override
+    public Long copyTradeProfile(Integer sourceBizType, Long sourceBizId, Integer targetBizType, Long targetBizId) {
+        CrmTradeProfileDO sourceProfile = getTradeProfile(sourceBizType, sourceBizId);
+        if (sourceProfile == null) {
+            return null;
+        }
+
+        CrmTradeProfileDO targetProfile = BeanUtils.toBean(sourceProfile, CrmTradeProfileDO.class);
+        targetProfile.setId(null);
+        targetProfile.setBizType(targetBizType);
+        targetProfile.setBizId(targetBizId);
+        targetProfile.clean();
+        targetProfile.setDeleted(null);
+
+        CrmTradeProfileDO existingTarget = getTradeProfile(targetBizType, targetBizId);
+        if (existingTarget != null) {
+            targetProfile.setId(existingTarget.getId());
+            tradeProfileMapper.updateById(targetProfile);
+            return existingTarget.getId();
+        }
+        tradeProfileMapper.insert(targetProfile);
+        return targetProfile.getId();
+    }
+
 }
