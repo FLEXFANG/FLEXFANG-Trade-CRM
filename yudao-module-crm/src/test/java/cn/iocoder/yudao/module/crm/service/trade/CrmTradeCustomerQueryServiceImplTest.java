@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -98,6 +99,33 @@ class CrmTradeCustomerQueryServiceImplTest {
         PageResult<CrmTradeCustomerRespVO> result = queryService.getTradeCustomerPage(reqVO, 99L);
         assertEquals(3L, result.getTotal());
         assertEquals(20L, result.getList().get(0).getCustomerId());
+    }
+
+    @Test
+    void getTradeCustomerPage_ordersOverdueThenTodayThenFuture() {
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+        CrmCustomerDO overdue = CrmCustomerDO.builder().id(10L).name("Overdue")
+                .contactNextTime(startOfToday.minusHours(1)).build();
+        CrmCustomerDO today = CrmCustomerDO.builder().id(20L).name("Today")
+                .contactNextTime(startOfToday.plusHours(10)).build();
+        CrmCustomerDO future = CrmCustomerDO.builder().id(30L).name("Future")
+                .contactNextTime(startOfToday.plusDays(2)).build();
+        when(customerService.getCustomerPage(org.mockito.ArgumentMatchers.any(CrmCustomerPageReqVO.class), eq(99L)))
+                .thenReturn(new PageResult<>(List.of(future, today, overdue), 3L));
+        when(tradeProfileMapper.selectListByBiz(eq(CrmBizTypeEnum.CRM_CUSTOMER.getType()), anyCollection()))
+                .thenReturn(List.of(
+                        CrmTradeProfileDO.builder().bizId(10L).leadScore(10).build(),
+                        CrmTradeProfileDO.builder().bizId(20L).leadScore(100).build(),
+                        CrmTradeProfileDO.builder().bizId(30L).leadScore(100).build()));
+
+        CrmTradeCustomerPageReqVO reqVO = new CrmTradeCustomerPageReqVO();
+        reqVO.setPageNo(1);
+        reqVO.setPageSize(20);
+
+        PageResult<CrmTradeCustomerRespVO> result = queryService.getTradeCustomerPage(reqVO, 99L);
+
+        assertEquals(List.of(10L, 20L, 30L),
+                result.getList().stream().map(CrmTradeCustomerRespVO::getCustomerId).toList());
     }
 
 }
