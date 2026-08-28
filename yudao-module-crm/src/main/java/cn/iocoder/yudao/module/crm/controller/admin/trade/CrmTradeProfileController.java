@@ -2,9 +2,11 @@ package cn.iocoder.yudao.module.crm.controller.admin.trade;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.common.validation.InEnum;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeProfileRespVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeProfileSaveReqVO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeProfileDO;
+import cn.iocoder.yudao.module.crm.enums.trade.CrmTradeBizTypeEnum;
 import cn.iocoder.yudao.module.crm.service.trade.CrmTradeProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,8 +33,10 @@ public class CrmTradeProfileController {
     @Parameter(name = "bizType", description = "CRM 业务类型：1 线索、2 客户、4 商机", required = true)
     @Parameter(name = "bizId", description = "CRM 业务编号", required = true)
     @PreAuthorize("@ss.hasPermission('crm:trade-profile:query')")
-    public CommonResult<CrmTradeProfileRespVO> getTradeProfile(@RequestParam("bizType") Integer bizType,
-                                                                @RequestParam("bizId") Long bizId) {
+    public CommonResult<CrmTradeProfileRespVO> getTradeProfile(
+            @RequestParam("bizType")
+            @InEnum(value = CrmTradeBizTypeEnum.class, message = "业务类型仅支持线索、客户、商机") Integer bizType,
+            @RequestParam("bizId") Long bizId) {
         CrmTradeProfileDO profile = tradeProfileService.getTradeProfile(bizType, bizId);
         return success(BeanUtils.toBean(profile, CrmTradeProfileRespVO.class));
     }
