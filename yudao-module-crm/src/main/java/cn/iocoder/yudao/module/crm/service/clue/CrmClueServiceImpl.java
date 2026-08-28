@@ -21,6 +21,7 @@ import cn.iocoder.yudao.module.crm.service.followup.bo.CrmFollowUpCreateReqBO;
 import cn.iocoder.yudao.module.crm.service.permission.CrmPermissionService;
 import cn.iocoder.yudao.module.crm.service.permission.bo.CrmPermissionCreateReqBO;
 import cn.iocoder.yudao.module.crm.service.permission.bo.CrmPermissionTransferReqBO;
+import cn.iocoder.yudao.module.crm.service.trade.CrmTradeProfileService;
 import cn.iocoder.yudao.module.system.api.user.AdminUserApi;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
@@ -60,6 +61,8 @@ public class CrmClueServiceImpl implements CrmClueService {
     private CrmPermissionService crmPermissionService;
     @Resource
     private CrmFollowUpRecordService followUpRecordService;
+    @Resource
+    private CrmTradeProfileService tradeProfileService;
 
     @Resource
     private AdminUserApi adminUserApi;
@@ -190,9 +193,12 @@ public class CrmClueServiceImpl implements CrmClueService {
 
         // 2.1 遍历线索(未转化的线索)，创建对应的客户
         Long customerId = customerService.createCustomer(BeanUtils.toBean(clue, CrmCustomerCreateReqBO.class), userId);
-        // 2.2 更新线索
+        // 2.2 继承外贸档案，避免国家、买家类型、MOQ、贸易条款、整柜潜力等信息在线索转客户时丢失
+        tradeProfileService.copyTradeProfile(CrmBizTypeEnum.CRM_CLUE.getType(), id,
+                CrmBizTypeEnum.CRM_CUSTOMER.getType(), customerId);
+        // 2.3 更新线索
         clueMapper.updateById(new CrmClueDO().setId(id).setTransformStatus(Boolean.TRUE).setCustomerId(customerId));
-        // 2.3 复制跟进记录
+        // 2.4 复制跟进记录
         List<CrmFollowUpRecordDO> followUpRecords = followUpRecordService.getFollowUpRecordByBiz(
                 CrmBizTypeEnum.CRM_CLUE.getType(), singleton(clue.getId()));
         if (CollUtil.isNotEmpty(followUpRecords)) {
