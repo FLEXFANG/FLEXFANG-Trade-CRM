@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.crm.controller.admin.trade.vo;
 
 import cn.iocoder.yudao.framework.common.validation.InEnum;
-import cn.iocoder.yudao.module.crm.enums.common.CrmBizTypeEnum;
+import cn.iocoder.yudao.module.crm.enums.trade.CrmTradeBizTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -17,7 +17,7 @@ public class CrmTradeProfileSaveReqVO {
 
     @Schema(description = "CRM 业务类型：1 线索、2 客户、4 商机", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
     @NotNull(message = "业务类型不能为空")
-    @InEnum(CrmBizTypeEnum.class)
+    @InEnum(value = CrmTradeBizTypeEnum.class, message = "业务类型仅支持线索、客户、商机")
     private Integer bizType;
 
     @Schema(description = "CRM 业务编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "1024")
