@@ -90,8 +90,8 @@ public class CrmTradeCustomerQueryServiceImpl implements CrmTradeCustomerQuerySe
 
     private Comparator<CrmTradeCustomerRespVO> customerComparator() {
         return Comparator
-                .comparing(this::isOverdue).reversed()
-                .thenComparing(this::isDueToday).reversed()
+                .comparing((CrmTradeCustomerRespVO customer) -> isOverdue(customer), Comparator.reverseOrder())
+                .thenComparing(customer -> isDueToday(customer), Comparator.reverseOrder())
                 .thenComparing(customer -> valueOrMinusOne(customer.getLeadScore()), Comparator.reverseOrder())
                 .thenComparing(CrmTradeCustomerRespVO::getContactNextTime,
                         Comparator.nullsLast(Comparator.naturalOrder()))
