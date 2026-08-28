@@ -3,13 +3,16 @@ package cn.iocoder.yudao.module.crm.service.trade;
 import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.crm.controller.admin.customer.vo.customer.CrmCustomerPageReqVO;
+import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerDetailRespVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerPageReqVO;
 import cn.iocoder.yudao.module.crm.controller.admin.trade.vo.CrmTradeCustomerRespVO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.customer.CrmCustomerDO;
+import cn.iocoder.yudao.module.crm.dal.dataobject.followup.CrmFollowUpRecordDO;
 import cn.iocoder.yudao.module.crm.dal.dataobject.trade.CrmTradeProfileDO;
 import cn.iocoder.yudao.module.crm.dal.mysql.trade.CrmTradeProfileMapper;
 import cn.iocoder.yudao.module.crm.enums.common.CrmBizTypeEnum;
 import cn.iocoder.yudao.module.crm.service.customer.CrmCustomerService;
+import cn.iocoder.yudao.module.crm.service.followup.CrmFollowUpRecordService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -33,10 +36,14 @@ import static cn.iocoder.yudao.framework.common.pojo.PageParam.PAGE_SIZE_NONE;
 @Validated
 public class CrmTradeCustomerQueryServiceImpl implements CrmTradeCustomerQueryService {
 
+    private static final int RECENT_FOLLOW_UP_LIMIT = 20;
+
     @Resource
     private CrmCustomerService customerService;
     @Resource
     private CrmTradeProfileMapper tradeProfileMapper;
+    @Resource
+    private CrmFollowUpRecordService followUpRecordService;
 
     @Override
     public PageResult<CrmTradeCustomerRespVO> getTradeCustomerPage(CrmTradeCustomerPageReqVO reqVO, Long userId) {
@@ -56,6 +63,28 @@ public class CrmTradeCustomerQueryServiceImpl implements CrmTradeCustomerQuerySe
         int fromIndex = Math.min((reqVO.getPageNo() - 1) * reqVO.getPageSize(), filtered.size());
         int toIndex = Math.min(fromIndex + reqVO.getPageSize(), filtered.size());
         return new PageResult<>(new ArrayList<>(filtered.subList(fromIndex, toIndex)), total);
+    }
+
+    @Override
+    public CrmTradeCustomerDetailRespVO getTradeCustomerDetail(Long customerId) {
+        // 调用原生 Customer Service：由其 @CrmPermission(READ) 统一执行客户数据权限校验。
+        CrmCustomerDO customer = customerService.getCustomer(customerId);
+        if (customer == null) {
+            return null;
+        }
+        CrmTradeProfileDO profile = tradeProfileMapper.selectByBiz(CrmBizTypeEnum.CRM_CUSTOMER.getType(), customerId);
+        List<CrmFollowUpRecordDO> followUps = followUpRecordService.getFollowUpRecordByBiz(
+                CrmBizTypeEnum.CRM_CUSTOMER.getType(), Collections.singleton(customerId));
+
+        CrmTradeCustomerDetailRespVO detail = new CrmTradeCustomerDetailRespVO();
+        detail.setCustomer(buildCustomer(customer, profile));
+        detail.setRecentFollowUps(followUps.stream()
+                .sorted(Comparator.comparing(CrmFollowUpRecordDO::getCreateTime,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(RECENT_FOLLOW_UP_LIMIT)
+                .map(this::buildFollowUp)
+                .toList());
+        return detail;
     }
 
     private List<CrmCustomerDO> getPermittedCustomers(CrmTradeCustomerPageReqVO reqVO, Long userId) {
@@ -149,6 +178,16 @@ public class CrmTradeCustomerQueryServiceImpl implements CrmTradeCustomerQuerySe
         resp.setNextAction(profile.getNextAction());
         resp.setLostReason(profile.getLostReason());
         return resp;
+    }
+
+    private CrmTradeCustomerDetailRespVO.FollowUp buildFollowUp(CrmFollowUpRecordDO record) {
+        CrmTradeCustomerDetailRespVO.FollowUp item = new CrmTradeCustomerDetailRespVO.FollowUp();
+        item.setId(record.getId());
+        item.setType(record.getType());
+        item.setContent(record.getContent());
+        item.setNextTime(record.getNextTime());
+        item.setCreateTime(record.getCreateTime());
+        return item;
     }
 
     private boolean matchesText(String actual, String expected) {
