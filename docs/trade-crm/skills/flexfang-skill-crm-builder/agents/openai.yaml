@@ -1,4 +1,0 @@
-interface:
-  display_name: "FLEXFANG-SKILL-CRM-BUILDER"
-  short_description: "Evidence-first GitHub CRM research and architecture decisions"
-  default_prompt: "Use flexfang-skill-crm-builder to research mature CRM capabilities on GitHub, validate evidence and licenses, compare candidates, and produce a FLEXFANG CRM architecture decision before any build phase."

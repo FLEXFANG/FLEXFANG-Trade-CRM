@@ -2,33 +2,33 @@
 name: flexfang-skill-crm-builder
 version: "1.1.0"
 description: >-
-  Evidence-first B2B CRM research and architecture Skill. Use when the user asks to research,
+  Evidence-first B2B CRM research and architecture method for the FLEXFANG Trade CRM project. Use when the user asks to research,
   compare, select, combine, or architect CRM, lead-management, sales-pipeline, sales-automation,
-  customer-intelligence, or CRM Agent/Skill solutions from GitHub before building a FLEXFANG CRM.
+  or customer-intelligence solutions from GitHub before building the FLEXFANG Trade CRM.
   Do not use for routine CRM CRUD, one-off prospecting, outreach copywriting, or direct production changes.
 ---
 
-# FLEXFANG CRM Builder
+# FLEXFANG Trade CRM — CRM Research Method
 
 ## Mission
-Research proven CRM and adjacent open-source capabilities before proposing a FLEXFANG CRM architecture. The operating loop is:
+Research proven CRM and adjacent open-source capabilities before proposing the FLEXFANG Trade CRM architecture. The operating loop is:
 
 `DISCOVER -> ANALYZE -> EXTRACT -> COMPARE -> SELECT -> FUSE -> IMPROVE -> DECIDE`
 
-This Skill is a **research + architecture decision** Skill. It does not silently become a production implementation agent.
+This method is a **research + architecture decision** method. It does not silently become a production implementation.
 
 ## Trigger contract
 
 ### Trigger when
-Use this Skill when the user asks to:
-- design or architect a CRM system or CRM Skill using mature GitHub projects;
+Use this method when the user asks to:
+- design or architect a CRM system using mature GitHub projects;
 - compare CRM / sales pipeline / lead management / automation / enrichment projects;
 - decide `ADOPT / ADAPT / LEARN / BUILD / REJECT` for CRM capabilities;
 - produce an evidence-backed CRM open-source research report, capability matrix, or architecture decision;
 - combine multiple mature implementations into a FLEXFANG-specific B2B CRM design.
 
 ### Do not trigger when
-Do not use this Skill for:
+Do not use this method for:
 - routine CRM operations such as “add these 20 leads”, “change this lead to high intent”, or “show overdue follow-ups”;
 - one-off B2B prospecting or market-lead discovery;
 - drafting sales emails, WhatsApp/Zalo/LinkedIn messages, or quotations;
@@ -53,10 +53,6 @@ Before research begins, verify:
 3. output file writing is available if formal artifacts are requested.
 
 If GitHub access is unavailable, return `BLOCKED_PRECONDITION`. Do **not** substitute model memory for the required GitHub research.
-
-Soft/downstream dependencies:
-- FLEXFANG-SKILL-FORGE: used only after the architecture decision when creating a downstream Skill.
-- FLEXFANG-GITHUB-REPOSITORY-MANAGER: used only if a later build phase is explicitly authorized.
 
 ## Research gate
 The first research pass must aim for:
@@ -122,7 +118,7 @@ Use explicit states:
 - `NOT_READY`
 - `READY`
 
-`READY` is reserved for the **Skill package validation state** and may only be reported when `python scripts/ready_check.py` exits successfully.
+`READY` is reserved for the **method validation state** and may only be reported when `python scripts/ready_check.py` exits successfully.
 
 ## Safety and authorization
-Human approval is required before production deployment, external communication, financial decisions, or security-sensitive operations. The Skill itself does not send outreach, change production CRM data, or deploy code.
+Human approval is required before production deployment, external communication, financial decisions, or security-sensitive operations. The method itself does not send outreach, change production CRM data, or deploy code.

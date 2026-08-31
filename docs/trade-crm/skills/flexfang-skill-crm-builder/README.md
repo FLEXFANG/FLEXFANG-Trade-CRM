@@ -1,16 +1,15 @@
-# FLEXFANG CRM Builder Skill
+# FLEXFANG Trade CRM — CRM Research Method
 
-Status: package status must be determined by `python scripts/ready_check.py`. Do not install a package that reports `NOT READY`.
+Project-local method for the `FLEXFANG-Trade-CRM` project. It researches mature open-source CRM, lead-management, sales-pipeline, automation, and customer-intelligence capabilities, validates evidence and licenses, and produces a Trade-CRM architecture decision before implementation.
 
-## 1. What this Skill does — and does not do
+## 1. What this method does — and does not do
 
-`flexfang-skill-crm-builder` researches mature GitHub CRM, lead-management, sales-pipeline, automation, enrichment and Agent/Skill projects, extracts the strongest capabilities, validates evidence and licenses, and produces a FLEXFANG-specific CRM architecture decision.
+`flexfang-skill-crm-builder` researches mature GitHub CRM, lead-management, sales-pipeline, automation, enrichment and AI-agent projects, extracts the strongest capabilities, validates evidence and licenses, and produces a FLEXFANG Trade CRM architecture decision.
 
-It is **not** the runtime CRM manager. It does not add/edit customer records, send outreach, deploy production code, or replace the downstream CRM implementation agent.
+It is **not** a runtime CRM manager. It does not add/edit customer records, send outreach, deploy production code, or implement the CRM.
 
-## 2. Required and optional prerequisites
+## 2. Required prerequisites
 
-### Required
 - live GitHub search/repository access;
 - ability to inspect repository metadata and relevant source/docs/license files;
 - Python 3.10+ for deterministic validators/tests;
@@ -18,25 +17,13 @@ It is **not** the runtime CRM manager. It does not add/edit customer records, se
 
 If GitHub access is unavailable, the correct result is `BLOCKED_PRECONDITION`, not an architecture guessed from memory.
 
-### Optional / downstream
-- `FLEXFANG-SKILL-FORGE`: for creating a downstream Skill after the architecture decision;
-- `FLEXFANG-GITHUB-REPOSITORY-MANAGER`: for a later authorized build phase.
+## 3. Repository location
 
-## 3. GitHub storage vs real installation
-
-Keeping this folder in GitHub is canonical source storage. Availability must be checked through the actual target Agent or a standard Agent Skills discovery mechanism; repository presence alone is not proof, but a checkout may already be discoverable.
-
-Before installation:
-1. run `python scripts/ready_check.py`;
-2. require final status `READY`;
-3. install/copy the validated Skill folder using the target environment's supported Skill installation mechanism;
-4. run at least one positive trigger and one negative-trigger smoke test in that environment.
-
-Do not infer target-agent availability only from a GitHub URL, ZIP upload, or registry entry.
+This method lives in the `FLEXFANG-Trade-CRM` repository under `docs/trade-crm/skills/`. It is project-local guidance for the Trade-CRM project; it is not a globally installed FLEXFANG Skill and requires no Skill runtime, installer, or registry.
 
 ## 4. Simplest call
 
-> Use @flexfang-skill-crm-builder to research mature GitHub CRM projects for a B2B export business, compare the strongest data model, pipeline, automation and AI-agent capabilities, and give me an evidence-backed FLEXFANG CRM architecture decision before any coding.
+> Research mature GitHub CRM projects for a B2B export business, compare the strongest data model, pipeline, automation and AI-agent capabilities, and give me an evidence-backed FLEXFANG Trade CRM architecture decision before any coding.
 
 ## 5. Input fields
 
@@ -92,27 +79,27 @@ Input validation:
 python scripts/validate_input.py --input input.json
 ```
 
-Full package validation:
+Method package validation:
 
 ```bash
 python scripts/ready_check.py
 ```
 
-The READY checker validates structure, metadata, JSON files, README coverage, Python compilation, eval definitions, automatic tests, and output read-back.
+The validator checks structure, metadata, JSON files, README coverage, Python compilation, eval definitions, automatic tests, and output read-back.
 
 ## 9. Five copyable prompts
 
 ### Prompt 1 — Full CRM landscape
-> Use @flexfang-skill-crm-builder. We are a B2B export company. Search GitHub globally for mature CRM, lead, pipeline, automation and AI-agent projects. Do not filter by stars alone. Build a capability matrix, verify licenses, and give me a FLEXFANG CRM architecture decision. No coding before the decision gate.
+> Use @flexfang-skill-crm-builder. We are a B2B export company. Search GitHub globally for mature CRM, lead, pipeline, automation and AI-agent projects. Do not filter by stars alone. Build a capability matrix, verify licenses, and give me a FLEXFANG Trade CRM architecture decision. No coding before the decision gate.
 
 ### Prompt 2 — Lead + pipeline focus
 > Use @flexfang-skill-crm-builder to compare open-source lead management, lead scoring and B2B sales pipeline projects. I care most about qualification, owner/status, opportunity stages and follow-up activities. Show evidence and decide ADOPT / ADAPT / LEARN / BUILD for each capability.
 
 ### Prompt 3 — AI-native CRM focus
-> Use @flexfang-skill-crm-builder to research AI-native CRM agents and CRM Skills plus mature traditional CRMs. Compare natural-language actions, customer timeline, next-best-action logic, automation and tool/MCP architecture. Verify implementation evidence before recommending reuse.
+> Use @flexfang-skill-crm-builder to research AI-native CRM agents plus mature traditional CRMs. Compare natural-language actions, customer timeline, next-best-action logic, automation and tool/MCP architecture. Verify implementation evidence before recommending reuse.
 
 ### Prompt 4 — Existing architecture challenge
-> Use @flexfang-skill-crm-builder to challenge my proposed CRM architecture against mature GitHub projects. Identify where existing projects have stronger data models, APIs, pipeline or automation, which parts should be learned rather than copied, and what FLEXFANG should build itself.
+> Use @flexfang-skill-crm-builder to challenge my proposed Trade CRM architecture against mature GitHub projects. Identify where existing projects have stronger data models, APIs, pipeline or automation, which parts should be learned rather than copied, and what FLEXFANG should build itself.
 
 ### Prompt 5 — Research-to-decision package
 > Use @flexfang-skill-crm-builder. Produce the complete CRM open-source research packet: candidate inventory, shortlist, deep inspections, health, license/reuse analysis, capability matrix, rejected projects, recommended stack, FLEXFANG differentiation and final architecture decision. Stop if evidence is insufficient; do not pad results.
@@ -120,17 +107,17 @@ The READY checker validates structure, metadata, JSON files, README coverage, Py
 ## 10. Trigger boundary examples
 
 Should trigger:
-- “Research GitHub and design a B2B CRM architecture for us.”
-- “Compare Twenty/ERPNext/other CRM projects and tell me what to adopt or adapt.”
+- "Research GitHub and design a B2B CRM architecture for us."
+- "Compare Twenty/ERPNext/other CRM projects and tell me what to adopt or adapt."
 
 Should not trigger:
-- “Add these 20 Vietnamese leads to my CRM.”
-- “Find 20 motorcycle helmet importers in Vietnam.”
-- “Write a Zalo follow-up message.”
+- "Add these 20 Vietnamese leads to my CRM."
+- "Find 20 motorcycle helmet importers in Vietnam."
+- "Write a Zalo follow-up message."
 
-## 11. READY rule
+## 11. Validation gate
 
-Only this command can open the installation gate:
+Only this command reports the method's validation state:
 
 ```bash
 python scripts/ready_check.py
@@ -142,6 +129,4 @@ Expected terminal result:
 READY
 ```
 
-Any failure means `NOT READY / DO NOT INSTALL`.
-
-Legacy runtime id: `flexfang-crm-builder`. Current runtime id: `flexfang-skill-crm-builder`.
+Any failure means `NOT READY` — do not rely on the method until it passes.
