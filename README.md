@@ -1,3 +1,9 @@
+> **FLEXFANG-Trade-CRM** — This repository is the active FLEXFANG business project: a
+> customized fork of the RuoYi-Vue Pro (yudao) platform. The content below is upstream
+> documentation retained for reference. See `AGENTS.md` for repository instructions.
+>
+> Upstream: https://github.com/YunaiV/ruoyi-vue-pro
+
 <p align="center">
  <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-blue.svg" alt="Downloads">
  <img src="https://img.shields.io/badge/Vue-3.2-blue.svg" alt="Downloads">
