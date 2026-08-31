@@ -1,0 +1,18 @@
+{
+  "skill":"flexfang-skill-crm-builder",
+  "version":"1.1.0",
+  "cases":[
+    {"id":"trigger_full_crm_architecture","input":"帮我先去 GitHub 全球研究成熟 CRM、Sales、Lead、Automation 项目，再组合成适合我们 B2B 外贸业务的 CRM 架构，先不要写代码。","expected":{"should_trigger":true,"state":"RESEARCH_IN_PROGRESS"},"assertions":["must research GitHub before architecture","must build capability matrix","must not start implementation before decision gate"]},
+    {"id":"trigger_compare_projects","input":"比较 Twenty、ERPNext 和其他 GitHub CRM 项目的数据模型、Pipeline、Automation 和 AI 能力，告诉我哪些 ADOPT/ADAPT/LEARN/BUILD。","expected":{"should_trigger":true,"state":"RESEARCH_IN_PROGRESS"},"assertions":["license must be checked","claims require evidence","stars are not a hard filter"]},
+    {"id":"no_trigger_runtime_crud","input":"把昨天找到的20个越南客户加入CRM，并把3个客户改成高意向。","expected":{"should_trigger":false},"assertions":["this is runtime CRM management, not CRM Builder"]},
+    {"id":"no_trigger_prospecting","input":"帮我找20家越南摩托车头盔进口商，生成Excel。","expected":{"should_trigger":false},"assertions":["this belongs to prospecting, not CRM architecture research"]},
+    {"id":"no_trigger_outreach_copy","input":"给一个越南经销商写一封简短的开发邮件。","expected":{"should_trigger":false},"assertions":["this is communication drafting"]},
+    {"id":"missing_required_inputs","input":"帮我做个CRM。","context":{},"expected":{"should_trigger":true,"state":"NEEDS_INPUT"},"assertions":["ask one combined question for business_context and crm_goal only if not inferable","do not ask for optional fields"]},
+    {"id":"github_unavailable","input":"研究GitHub然后设计CRM。","runtime":{"github_access":false},"expected":{"should_trigger":true,"state":"BLOCKED_PRECONDITION"},"assertions":["must not substitute model memory for live GitHub research"]},
+    {"id":"unknown_license_blocks_reuse","input":"这个项目没有明确license，但代码公开，直接拿来改可以吗？","expected":{"should_trigger":true,"reuse_decision_for_unknown_license":["LEARN","BUILD","REJECT"]},"assertions":["ADOPT and ADAPT are forbidden without verified license evidence"]},
+    {"id":"readme_only_deep_claim","input":"README 写了支持智能 lead scoring，就直接判定它实现成熟吧。","expected":{"should_trigger":true,"state":"RESEARCH_IN_PROGRESS"},"assertions":["README alone does not prove deep implementation behavior","inspect implementation/docs/tests when reasonably available"]},
+    {"id":"research_shortfall_no_padding","input":"如果只找到12个真正符合要求的项目，也必须凑满20个。","expected":{"should_trigger":true,"state":"RESEARCH_IN_PROGRESS"},"assertions":["do not pad with irrelevant or unverifiable projects","report qualified-count shortfall"]},
+    {"id":"decision_gate","input":"还没做 capability matrix 和 license 检查，先开始写 CRM 后端。","expected":{"should_trigger":true,"state":"NOT_READY"},"assertions":["no large implementation before GitHub research + capability matrix + architecture decision"]},
+    {"id":"formal_output_gate","input":"研究完成后给我正式 research report、matrix、architecture decision 和结构化数据。","expected":{"should_trigger":true,"state":"DECISION_READY"},"assertions":["generate real markdown/csv/json files","all files must pass read-back validation"]}
+  ]
+}
