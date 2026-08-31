@@ -1,0 +1,20 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://flexfang.local/schemas/flexfang-skill-crm-builder-input.schema.json",
+  "title":"FLEXFANG CRM Builder Input",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["business_context","crm_goal"],
+  "properties":{
+    "business_context":{"type":"string","minLength":10,"description":"Business, product/service, buyer and sales context relevant to the CRM design."},
+    "crm_goal":{"type":"string","minLength":3,"description":"The CRM system/capability outcome to research and architect."},
+    "target_markets":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true,"default":[]},
+    "priority_capabilities":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true,"default":[]},
+    "candidate_target":{"type":"integer","minimum":15,"maximum":30,"default":20},
+    "shortlist_target":{"type":"integer","minimum":5,"maximum":12,"default":10},
+    "deep_dive_target":{"type":"integer","minimum":3,"maximum":8,"default":5},
+    "language":{"type":"string","minLength":2,"default":"zh-CN"},
+    "reuse_policy":{"type":"string","enum":["adopt_adapt_learn_build"],"default":"adopt_adapt_learn_build"},
+    "special_constraints":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true,"default":[]}
+  }
+}

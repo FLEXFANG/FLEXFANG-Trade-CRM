@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://flexfang.local/schemas/flexfang-skill-crm-builder-evidence.schema.json",
+  "title":"FLEXFANG CRM Research Packet",
+  "type":"object",
+  "required":["as_of","business_context","crm_goal","candidates","capability_matrix","recommended_stack","flexfang_differentiation","architecture_decision"],
+  "properties":{
+    "as_of":{"type":"string","format":"date"},
+    "business_context":{"type":"string"},
+    "crm_goal":{"type":"string"},
+    "candidates":{"type":"array","items":{"type":"object","required":["name","repo_url","observed_at","health_status","license","evidence","reuse_decision","decision_reason"],"properties":{"name":{"type":"string"},"repo_url":{"type":"string","pattern":"^https://github\\.com/"},"observed_at":{"type":"string","format":"date"},"language":{"type":["string","null"]},"stars":{"type":["integer","null"],"minimum":0},"last_update":{"type":["string","null"]},"health_status":{"enum":["ACTIVE","STABLE","AGING","ABANDONED","UNKNOWN"]},"license":{"type":"object","required":["status","spdx","source_url","obligations"],"properties":{"status":{"enum":["verified","unknown"]},"spdx":{"type":["string","null"]},"source_url":{"type":["string","null"]},"obligations":{"type":"array","items":{"type":"string"}}}},"capabilities":{"type":"array","items":{"type":"string"}},"evidence":{"type":"array","minItems":1,"items":{"type":"object","required":["url","kind","claim","support_level","observed_at"],"properties":{"url":{"type":"string"},"path":{"type":["string","null"]},"kind":{"enum":["repo_metadata","readme","docs","implementation","tests","license","release","issue","pull_request"]},"claim":{"type":"string"},"support_level":{"enum":["direct","supporting","discovery_only"]},"observed_at":{"type":"string","format":"date"}}}},"reuse_decision":{"enum":["ADOPT","ADAPT","LEARN","BUILD","REJECT"]},"decision_reason":{"type":"string"}}}},
+    "capability_matrix":{"type":"array"},
+    "recommended_stack":{"type":"array"},
+    "flexfang_differentiation":{"type":"array"},
+    "architecture_decision":{"type":"object"}
+  }
+}
